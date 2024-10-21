@@ -19,7 +19,6 @@
     <Folder Include="Services\" />
     <Folder Include="Repository\IRepository\" />
     <Folder Include="VeiwModels\" />
-    <Folder Include="wwwroot\images\" />
     <Folder Include="wwwroot\js\" />
   </ItemGroup>
 
