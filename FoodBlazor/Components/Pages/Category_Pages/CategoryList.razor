@@ -1,5 +1,7 @@
 ﻿@page "/category"
 @inject ICategoryRepository _categoryRepository
+@inject IJSRuntime _JS
+<BSModal OnModalConfirmation="ConfirmDalete_Click" ButtonStyle="btn-danger" ButtonText="Delete" Title="Are you sure you want to delete this category?"/>
 @if (IsProcessing)
 {
     <div class="position-absolute w-75 h-75 d-flex flex-column align-items-center bg-white justify-content-center">
@@ -38,7 +40,7 @@ else
                                 <td>@obj.Name</td>
                                 <td class="text-end">
                                     <a href="@($"category/update/{obj.Id}")" class="btn btn-primary"><i class="bi bi-pencil-square"></i> Edit</a>
-                                    <button class="btn btn-danger"><i class="bi bi-archive-fill"></i> Delete</button>
+                                    <button @onclick="@(()=>HandleDelete(obj.Id))" class="btn btn-danger"><i class="bi bi-archive-fill"></i> Delete</button>
                                 </td>
                             </tr>
                         }
@@ -52,6 +54,7 @@ else
 @code {
     public bool IsProcessing { get; set; } = true;
     private IEnumerable<Category> Categories { get; set; } = new List<Category>();
+    private int DeleteCategoryID { get; set; } = 0;
     // protected override async Task OnInitializedAsync()
     // {
 
@@ -65,11 +68,33 @@ else
             IsProcessing = false;
             StateHasChanged();
         }
-       
+
     }
     private async Task LoadCategories()
     {
         Categories=await _categoryRepository.GetAllAsync();
+    }
+    private void HandleDelete(int id)
+    {
+        DeleteCategoryID = id;
+        _JS.InvokeVoidAsync("ShowConfirmationModal");
+    }
+
+    private async Task ConfirmDalete_Click(bool isConfirmed)
+    {
+        IsProcessing = true;
+        await _JS.InvokeVoidAsync("HideConfirmationModal");
+        if(isConfirmed && DeleteCategoryID != 0)
+        {
+            var result=await _categoryRepository.DeleteAsync(DeleteCategoryID);
+            if (result) _JS?.ToastrSuccess("Category deleted successfully");
+            else _JS?.ToastrError("Error encountred while deleting");
+
+            await LoadCategories();
+        }
+        
+        DeleteCategoryID = 0;
+        IsProcessing = false;
     }
 
 }
