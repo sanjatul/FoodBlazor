@@ -1,6 +1,7 @@
 ﻿@page "/product"
 @inject IProductRepository _productRepository
 @inject IJSRuntime _JS
+@using System.Globalization
 <BSModal OnModalConfirmation="ConfirmDalete_Click" ButtonStyle="btn-danger" ButtonText="Delete" Title="Are you sure you want to delete this product?"/>
 @if (IsProcessing)
 {
@@ -30,6 +31,9 @@ else
                     <thead>
                         <tr>
                             <th>Name</th>
+                            <th>Price</th>
+                            <th>Special Tag</th>
+                            <th>Category</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -38,6 +42,9 @@ else
                         {
                             <tr >
                                 <td>@obj.Name</td>
+                                <td>@obj.Price.ToString("C", CultureInfo.GetCultureInfo("en-us"))</td>
+                                <td><span class="badge text-bg-info"> @obj.SpecialTag</span></td>
+                                <td>@obj.Category.Name</td>
                                 <td class="text-end">
                                     <a href="@($"product/update/{obj.Id}")" class="btn btn-primary"><i class="bi bi-pencil-square"></i> Edit</a>
                                     <button @onclick="@(()=>HandleDelete(obj.Id))" class="btn btn-danger"><i class="bi bi-archive-fill"></i> Delete</button>
@@ -55,10 +62,7 @@ else
     public bool IsProcessing { get; set; } = true;
     private IEnumerable<Product> Products { get; set; } = new List<Product>();
     private int DeleteProductID { get; set; } = 0;
-    // protected override async Task OnInitializedAsync()
-    // {
-
-    // }
+ 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)

@@ -3,6 +3,7 @@
 @inject IProductRepository _productRepository
 @inject ICategoryRepository _categoryRepository
 @inject NavigationManager _navigationManager
+@inject IWebHostEnvironment _webHostEnvironment
 @inject IJSRuntime _JS
 
 <BSModal/>
@@ -38,6 +39,11 @@ else
                         <ValidationMessage For="@(() => Product.Description)" />
                     </div>
                     <div class="form-floating py-3 col-12">
+                        <InputText @bind-Value="Product.SpecialTag" class="form-control" id="SpecialTag" placeholder="Description" />
+                        <label for="SpecialTag">Special Tag</label>
+                        <ValidationMessage For="@(() => Product.SpecialTag)" />
+                    </div>
+                    <div class="form-floating py-3 col-12">
                         <InputNumber @bind-Value="Product.Price" class="form-control" id="Price" placeholder="Price" />
                         <label for="Price">Price</label>
                         <ValidationMessage For="@(() => Product.Price)" />
@@ -52,6 +58,22 @@ else
                         </InputSelect>
                         <label for="Category">Category</label>
                         <ValidationMessage For="@(() => Product.CategoryId)" />
+                    </div>
+
+                    <div class="form-floating py-3 col-12">
+                        <InputFile OnChange="LoadFile" class="form-control" id="customFile" accept="image/x-png,image/jpeg"/>
+                        <label for="customFile">Upload Image</label>
+                        @if (Product.ImageUrl != null)
+                        {
+                            <div class="row pt-3">
+                                <div class="col-3">
+                                    <img src="@Product.ImageUrl" alt="..." class="img-thumbnail"/>
+                                </div>
+                                <div class="col-md-9">
+                                    <i class="bi bi-trash btn btn-outline-danger" @onclick="DeleteImage">Remove</i>
+                                </div>
+                            </div>
+                        }
                     </div>
                     <div class="row mt-3">
                         <div class="col-6 col-md-3">
@@ -77,15 +99,22 @@ else
     public int Id{ get; set; }
     [SupplyParameterFromForm]
     private Product Product{ get; set; } =new Product();
-    public bool IsProcessing { get; set; } = true;
+
 
     private IEnumerable<Category> _categories = new List<Category>();
+    private string? _directoryPath { get; set; }
+    public bool IsProcessing { get; set; } = true;
 
+    protected override Task OnInitializedAsync()
+    {
+        _directoryPath = Path.Combine(_webHostEnvironment.WebRootPath,"images","product");
+
+        return base.OnInitializedAsync();
+    }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            //await Task.Yield();
             await LoadProductAndCategory();
             IsProcessing = false;
             StateHasChanged();
@@ -118,5 +147,44 @@ else
         }
         IsProcessing = false;
         _navigationManager.NavigateTo("product");
+    }
+
+    private async Task LoadFile(InputFileChangeEventArgs e)
+    {
+        IsProcessing= true;
+        var file = e.File;
+        FileInfo fileInfo = new(file.Name);
+        var newFileName = $"{Guid.NewGuid()}.{fileInfo.Extension}";
+        if (!Directory.Exists(_directoryPath))
+        {
+            Directory.CreateDirectory(_directoryPath);
+        }
+        var path = Path.Combine(_directoryPath,newFileName);
+        await using FileStream fileStream = new(path, FileMode.Create);
+        await file.OpenReadStream(file.Size).CopyToAsync(fileStream);
+        Product.ImageUrl = $"/images/product/{newFileName}";
+        IsProcessing = false;
+
+    }
+    void DeleteImage()
+    {
+        if (Product.ImageUrl == null)
+            return;
+
+
+        var fileToDelete = Product.ImageUrl.Split('/').Reverse().First();
+
+        var filePathToDeleteImage = Path.Combine(_directoryPath, fileToDelete);
+
+        if (!File.Exists(filePathToDeleteImage))
+        {
+            Product.ImageUrl = null;
+            return;
+        }
+
+        File.Delete(filePathToDeleteImage);
+
+        Product.ImageUrl = null;
+        return;
     }
 }
