@@ -1,5 +1,7 @@
 ﻿@page "/cart"
 @using System.Globalization
+@inject SharedStateService _sharedStateService
+@using FoodBlazor.Services
 @using FoodBlazor.Utility
 @using Microsoft.AspNetCore.Authorization
 @inject IShoppingCartRepository _cartRepository
@@ -123,33 +125,33 @@ else
 
 }
 @code {
-	private IEnumerable<ShoppingCart> ShoppingCarts = new List<ShoppingCart>();
-	private bool IsProcessing { get; set; } = true;
+    private IEnumerable<ShoppingCart> ShoppingCarts = new List<ShoppingCart>();
+    private bool IsProcessing { get; set; } = true;
 
-	[SupplyParameterFromForm]
-	public OrderHeader OrderHeader { get; set; } = new OrderHeader();
-	private int TotalItems { get; set; } = 0;
+    [SupplyParameterFromForm]
+    public OrderHeader OrderHeader { get; set; } = new OrderHeader();
+    private int TotalItems { get; set; } = 0;
     protected override async Task OnInitializedAsync()
     {
         var authState = await _AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         OrderHeader.Email = user.FindFirst(u => u.Type.Contains("email"))?.Value;
         OrderHeader.UserId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
-       OrderHeader.Status = SD.StatusPending;
+        OrderHeader.Status = SD.StatusPending;
     }
 
-	protected override async Task OnAfterRenderAsync(bool firstRender)
-	{
-		if (firstRender)
-		{
-			await LoadCart();
-			IsProcessing = false;
-			StateHasChanged();
-		}
-	}
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadCart();
+            IsProcessing = false;
+            StateHasChanged();
+        }
+    }
 
-	private async Task LoadCart()
-	{
+    private async Task LoadCart()
+    {
         ShoppingCarts = await _cartRepository.GetAllAsync(OrderHeader.UserId);
 
         OrderHeader.OrderTotal = 0;
@@ -160,19 +162,19 @@ else
             TotalItems += cart.Count;
         }
         OrderHeader.OrderTotal = Math.Round(OrderHeader.OrderTotal, 2);
-	}
+    }
 
 
-	private async Task UpdateCartItem(int productId,int updatedBy)
-	{
-		var authState = await _AuthenticationStateProvider.GetAuthenticationStateAsync();
-		var user = authState.User;
-		//add item to cart
-		var userId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
-		var result = await
-		_cartRepository.UpdateCartAsync(userId, productId, updatedBy);
-
-		await LoadCart();
+    private async Task UpdateCartItem(int productId,int updatedBy)
+    {
+        var authState = await _AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        //add item to cart
+        var userId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+        var result = await
+        _cartRepository.UpdateCartAsync(userId, productId, updatedBy);
+        _sharedStateService.TotalCartCount = await _cartRepository.GetTotalCartCartCountAsync(OrderHeader.UserId);
+        await LoadCart();
 	}
 	private async Task ProcessOrderCreation()
 	{
