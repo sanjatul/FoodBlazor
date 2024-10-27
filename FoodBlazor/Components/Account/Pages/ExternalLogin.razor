@@ -4,6 +4,7 @@
 @using System.Security.Claims
 @using System.Text
 @using System.Text.Encodings.Web
+@using FoodBlazor.Utility
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using FoodBlazor.Data
@@ -137,6 +138,7 @@
         if (result.Succeeded)
         {
             result = await UserManager.AddLoginAsync(user, externalLoginInfo);
+            await UserManager.AddToRoleAsync(user, SD.Role_Customer);
             if (result.Succeeded)
             {
                 Logger.LogInformation("User created an account using {Name} provider.", externalLoginInfo.LoginProvider);
