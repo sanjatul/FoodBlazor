@@ -46,7 +46,22 @@ namespace FoodBlazor.Repository
 
         public async Task<IEnumerable<Product>> GetAllAsync()
         {
-            return await _db.Product.Include(u=>u.Category).ToListAsync();
+            //return await _db.Product.Include(u=>u.Category).ToListAsync();
+            var products = await (from p in _db.Product
+                                  join c in _db.Catagory on p.CategoryId equals c.Id into joined
+                                  from c in joined.DefaultIfEmpty()
+                                  select new Product
+                                  {
+                                      Id = p.Id,
+                                      Name = p.Name,
+                                      Price = p.Price,
+                                      Description = p.Description,
+                                      SpecialTag = p.SpecialTag,
+                                      CategoryId = p.CategoryId,
+                                      Category = c,
+                                      ImageUrl = p.ImageUrl
+                                  }).ToListAsync();
+            return products;
         }
 
         public async Task<Product> UpdateAsync(Product obj)

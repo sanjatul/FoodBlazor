@@ -34,21 +34,21 @@ builder.Services.AddAuthentication(options =>
         options.DefaultScheme = IdentityConstants.ApplicationScheme;
         options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
     })
-    .AddFacebook(options =>
-    {
-        options.AppId = "";
-        options.AppSecret = "";
-    }) 
-    .AddMicrosoftAccount(options =>
-    {
-        options.ClientId = "";
-        options.ClientSecret = "";
-    })
-    .AddGoogle(options =>
-    {
-        options.ClientId = "";
-        options.ClientSecret = "";
-    })
+    //.AddFacebook(options =>
+    //{
+    //    options.AppId = "";
+    //    options.AppSecret = "";
+    //}) 
+    //.AddMicrosoftAccount(options =>
+    //{
+    //    options.ClientId = "";
+    //    options.ClientSecret = "";
+    //})
+    //.AddGoogle(options =>
+    //{
+    //    options.ClientId = "";
+    //    options.ClientSecret = "";
+    //})
     .AddIdentityCookies();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
